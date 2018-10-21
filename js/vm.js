@@ -1,7 +1,8 @@
 var vm = new Vue({
     el: "#app",
     data: {
-        version: '2.3.41',
+        version: '2.3.48',
+        location: LANGUAGE || '',
         path: $.LS.get('path') || 'img/',
         show_path: false,
         base_url: 'https://app.coderprepares.com/evol/calculator/',
@@ -76,7 +77,7 @@ var vm = new Vue({
             level: {},
             list: [],
             overflow: false,
-            multiple: $.LS.get('multiple') || 2,
+            multiple: $.LS.get('multiple') || 4,
             cards: [],
             combine: [],
             card: 'my',
@@ -495,7 +496,7 @@ var vm = new Vue({
             $.LS.set('my_cards', JSON.stringify(newVal));
         },
         'company.decisiveness': function(newVal, oldVal) {
-            var max = 5000;
+            var max = 9000;
             var val = isNaN(parseInt(newVal, 10)) ? newVal : parseInt(newVal, 10);
             if (val && val > max) {
                 val = max;
@@ -505,7 +506,7 @@ var vm = new Vue({
             $.LS.set('company', JSON.stringify(this.company));
         },
         'company.creativity': function(newVal, oldVal) {
-            var max = 5000;
+            var max = 9000;
             var val = isNaN(parseInt(newVal, 10)) ? newVal : parseInt(newVal, 10);
             if (val && val > max) {
                 val = max;
@@ -514,7 +515,7 @@ var vm = new Vue({
             $.LS.set('company', JSON.stringify(this.company));
         },
         'company.kindness': function(newVal, oldVal) {
-            var max = 5000;
+            var max = 9000;
             var val = isNaN(parseInt(newVal, 10)) ? newVal : parseInt(newVal, 10);
             if (val && val > max) {
                 val = max;
@@ -523,7 +524,7 @@ var vm = new Vue({
             $.LS.set('company', JSON.stringify(this.company));
         },
         'company.activity': function(newVal, oldVal) {
-            var max = 5000;
+            var max = 9000;
             var val = isNaN(parseInt(newVal, 10)) ? newVal : parseInt(newVal, 10);
             if (val && val > max) {
                 val = max;
@@ -895,6 +896,12 @@ var vm = new Vue({
         }
     },
     methods: {
+        get_string: function(key){
+            if(typeof(strings) == 'object' && Object.keys(strings).indexOf(key) >= 0){
+                return strings[key];
+            }
+            return key;
+        },
         image_load: function(e) {
             $(e.target).closest('div').removeClass('image-load');
         },
@@ -919,8 +926,6 @@ var vm = new Vue({
 
             this.challenge_cards();
             this.update_field_ids();
-
-            // this.challenges.recommend_text = '点击推荐卡组，找出最小损耗组合。';
         },
         get_challenge_factor: function(challenge) {
             var ret = {};
@@ -944,7 +949,7 @@ var vm = new Vue({
         challenge_next: function() {
             var ready = this.challenge_ready();
             if(ready){
-                var ack = confirm('尚未记录损耗，确定进入下一关吗？');
+                var ack = confirm(this.get_string('TIP_NEXT_LEVEL'));
                 if(!ack){
                     return false;
                 }
@@ -1086,7 +1091,7 @@ var vm = new Vue({
             }
         },
         challenge_reset_click: function() {
-            var ack = confirm('确定重置吗？');
+            var ack = confirm(this.get_string('TIP_RESET'));
             if (!ack) {
                 return false;
             }
@@ -1262,37 +1267,47 @@ var vm = new Vue({
 
             var choice = [];
             var list = [];
+            var MAX_CARD_LIMIT = 30;
 
             for (var i = 0; i < this.challenges.cards.length; i++) {
                 var card = this.challenges.cards[i].card;
-                if (field_ids.indexOf(card.card_id) >= 0) {
-                    choice.push(card);
-                } else {
-                    list.push(card);
-                }
+
+                // if (field_ids.indexOf(card.card_id) >= 0) {
+                //     choice.push(card);
+                // } else {
+                //     list.push(card);
+                // }
+
+                list.push(card);
             }
 
             list.sort(function(a, b) {
                 return b.total - a.total;
             });
 
-            var limit = 30 - choice.length;
+            // var limit = MAX_CARD_LIMIT - choice.length;
 
-            if(limit <= 0){
-                //do nothing
-            } else if (list.length > limit) {
-                var line = list[limit - 1].total;
-                var gap = 200;
-                for (var i = 0; i < list.length; i++) {
-                    var card = list[i];
-                    if (card.total > line - gap) {
-                        choice.push(card);
-                    }
-                }
-            } else {
-                for (var i = 0; i < list.length; i++) {
-                    choice.push(list[i]);
-                }
+            // if(limit <= 0){
+            //     //do nothing
+            // } else if (list.length > limit) {
+            //     var line = list[limit - 1].total;
+            //     var gap = 200;
+            //     for (var i = 0; i < list.length; i++) {
+            //         var card = list[i];
+            //         if (card.total > line - gap) {
+            //             choice.push(card);
+            //         }
+            //     }
+            // } else {
+            //     for (var i = 0; i < list.length; i++) {
+            //         choice.push(list[i]);
+            //     }
+            // }
+            
+            var limit = Math.min(MAX_CARD_LIMIT, list.length);
+
+            for(var i = 0; i < limit; i++){
+                choice.push(list[i]);
             }
 
             var cards = [];
@@ -1303,9 +1318,9 @@ var vm = new Vue({
                     score: this.get_challenge_score(card)
                 });
             }
-            if (cards.length > 30) {
-                cards = cards.slice(0, 30);
-            }
+            // if (cards.length > MAX_CARD_LIMIT) {
+            //     cards = cards.slice(0, MAX_CARD_LIMIT);
+            // }
 
             var ids = [];
             for(var i = 0; i < cards.length; i++){
@@ -1324,37 +1339,47 @@ var vm = new Vue({
 
             var choice = [];
             var list = [];
+            var MAX_CARD_LIMIT = 30;
 
             for (var i = 0; i < this.challenges.cards.length; i++) {
                 var card = this.challenges.cards[i].card;
-                if (field_ids.indexOf(card.card_id) >= 0) {
-                    choice.push(card);
-                } else {
-                    list.push(card);
-                }
+
+                // if (field_ids.indexOf(card.card_id) >= 0) {
+                //     choice.push(card);
+                // } else {
+                //     list.push(card);
+                // }
+
+                list.push(card);
             }
 
             list.sort(function(a, b) {
                 return b.total - a.total;
             });
 
-            var limit = 30 - choice.length;
+            // var limit = MAX_CARD_LIMIT - choice.length;
 
-            if(limit <= 0){
-                //do nothing
-            } else if (list.length > limit) {
-                var line = list[limit - 1].total;
-                var gap = 200;
-                for (var i = 0; i < list.length; i++) {
-                    var card = list[i];
-                    if (card.total > line - gap) {
-                        choice.push(card);
-                    }
-                }
-            } else {
-                for (var i = 0; i < list.length; i++) {
-                    choice.push(list[i]);
-                }
+            // if(limit <= 0){
+            //     //do nothing
+            // } else if (list.length > limit) {
+            //     var line = list[limit - 1].total;
+            //     var gap = 200;
+            //     for (var i = 0; i < list.length; i++) {
+            //         var card = list[i];
+            //         if (card.total > line - gap) {
+            //             choice.push(card);
+            //         }
+            //     }
+            // } else {
+            //     for (var i = 0; i < list.length; i++) {
+            //         choice.push(list[i]);
+            //     }
+            // }
+
+            var limit = Math.min(MAX_CARD_LIMIT, list.length);
+
+            for(var i = 0; i < limit; i++){
+                choice.push(list[i]);
             }
 
             var cards = [];
@@ -1365,9 +1390,9 @@ var vm = new Vue({
                     score: this.get_challenge_score(card)
                 });
             }
-            if (cards.length > 30) {
-                cards = cards.slice(0, 30);
-            }
+            // if (cards.length > MAX_CARD_LIMIT) {
+            //     cards = cards.slice(0, MAX_CARD_LIMIT);
+            // }
 
             var empty_card = {
                 card_id: 0,
@@ -1593,7 +1618,7 @@ var vm = new Vue({
                 // console.log(max_score);
 
                 var diff = match_score + threshold - max_score;
-                this.challenges.recommend_text = '当前卡组无法达到过关要求，还需要磨掉 ' + diff + ' 分';
+                this.challenges.recommend_text = this.get_string('TIP_NO_MATCH_BEFORE') + diff + this.get_string('TIP_NO_MATCH_AFTER');
                 return false;
             } else {
                 this.challenges.recommend_text = '';
@@ -2533,7 +2558,7 @@ var vm = new Vue({
         },
         show_reverse: function() {
             if (this.get_ticket_empty('match') >= 0) {
-                this.show_msg('请先设置对手阵容');
+                this.show_msg(this.get_string('TIP_NO_SETTING'));
                 return false;
             }
 
@@ -2916,7 +2941,8 @@ var vm = new Vue({
             var data = {
                 ticket_id: self.ticket_select.ticket_id,
                 category: self.ticket_select.category,
-                star: self.ticket_select.star
+                star: self.ticket_select.star,
+                location: self.location
             };
 
             $('#save_today').button('loading');
@@ -2932,11 +2958,11 @@ var vm = new Vue({
 
                         $('#today').modal('hide');
                     } else if (res.info) {
-                        show_msg(res.info);
+                        self.show_msg(self.get_string(res.info));
                     }
                 },
                 error: function(res) {
-                    self.show_msg('请求失败');
+                    self.show_msg(self.get_string('TIP_REQUEST_FAIL'));
                 },
                 complete: function() {
                     $('#save_today').button('reset');
@@ -3111,16 +3137,16 @@ var vm = new Vue({
             var ret = '';
             switch (attr) {
                 case 'decisiveness':
-                    ret = '决策';
+                    ret = this.get_string('DECISIVENESS');
                     break;
                 case 'creativity':
-                    ret = '创造';
+                    ret = this.get_string('CREATIVITY');;
                     break;
                 case 'kindness':
-                    ret = '亲和';
+                    ret = this.get_string('KINDNESS');;
                     break;
                 case 'activity':
-                    ret = '行动';
+                    ret = this.get_string('ACTIVITY');;
                     break;
             }
             return ret;
@@ -3156,7 +3182,8 @@ var vm = new Vue({
                 type: 'post',
                 data: {
                     category: self.category,
-                    chapter: self.chapter
+                    chapter: self.chapter,
+                    location: self.location
                 },
                 success: function(res) {
                     if (res.status == 1) {
@@ -3197,7 +3224,7 @@ var vm = new Vue({
                                     item.combine.push(my_cards[j].name);
                                     total += my_cards[j].score;
                                 } else {
-                                    item.combine.push('未设置');
+                                    item.combine.push(self.get_string('TIP_NO_SETTING'));
                                 }
                             }
 
@@ -3220,11 +3247,11 @@ var vm = new Vue({
 
                         self.levels.list = list;
                     } else if (res.info) {
-                        show_msg(res.info);
+                        self.show_msg(self.get_string(res.info));
                     }
                 },
                 error: function(res) {
-                    self.show_msg('请求失败');
+                    self.show_msg(self.get_string('TIP_REQUEST_FAIL'));
                 },
                 complete: function() {
                     $('#get_levels').button('reset');
@@ -3248,7 +3275,8 @@ var vm = new Vue({
                 url: self.base_url + 'level',
                 type: 'post',
                 data: {
-                    id: id
+                    id: id,
+                    location: self.location
                 },
                 success: function(res) {
                     if (res.status == 1) {
@@ -3269,11 +3297,11 @@ var vm = new Vue({
 
                         self.level_cards();
                     } else if (res.info) {
-                        show_msg(res.info);
+                        self.show_msg(self.get_string(res.info));
                     }
                 },
                 error: function(res) {
-                    self.show_msg('请求失败');
+                    self.show_msg(self.get_string('TIP_REQUEST_FAIL'));
                 },
                 complete: function() {
                     $('#get_levels').button('reset');
@@ -3444,7 +3472,7 @@ var vm = new Vue({
                     'company': this.company
                 });
             } else if (this.batch.source == 'excel') {
-                data.push(['公司属性', this.company.decisiveness, this.company.creativity, this.company.kindness, this.company.activity].join("\t"));
+                data.push([this.get_string('COMPANY_PROP'), this.company.decisiveness, this.company.creativity, this.company.kindness, this.company.activity].join("\t"));
                 for (var i = 0; i < list.length; i++) {
                     var arr = list[i].name.split('·');
                     data.push([arr[1], list[i].decisiveness, list[i].creativity, list[i].kindness, list[i].activity].join("\t"));
@@ -3488,7 +3516,7 @@ var vm = new Vue({
                 });
                 self.download_data(export_data);
             } else if (this.batch.source == 'excel') {
-                data.push(['公司属性', this.company.decisiveness, this.company.creativity, this.company.kindness, this.company.activity].join("\t"));
+                data.push([this.get_string('COMPANY_PROP'), this.company.decisiveness, this.company.creativity, this.company.kindness, this.company.activity].join("\t"));
                 for (var i = 0; i < list.length; i++) {
                     var arr = list[i].name.split('·');
                     data.push([arr[1], list[i].decisiveness, list[i].creativity, list[i].kindness, list[i].activity].join("\t"));
@@ -3547,13 +3575,13 @@ var vm = new Vue({
                 contentType: false,
                 success: function(res) {
                     if (res.status == 1) {
-                        self.batch.export = '上传ID：' + res.id;
+                        self.batch.export = self.get_string('UPLOAD') + 'ID：' + res.id;
                     } else if (res.info) {
-                        self.show_msg(res.info);
+                        self.show_msg(self.get_string(res.info));
                     }
                 },
                 error: function() {
-                    self.show_msg('请求失败');
+                    self.show_msg(self.get_string('TIP_REQUEST_FAIL'));
                 }
             });
         },
@@ -3582,13 +3610,13 @@ var vm = new Vue({
                 try {
                     data = JSON.parse(data);
                 } catch (e) {
-                    self.show_msg('数据格式错误');
+                    self.show_msg(self.get_string('TIP_FORMAT_ERROR'));
                     return false;
                 }
 
                 if (data.company) {
                     list.push({
-                        name: '公司属性',
+                        name: self.get_string('COMPANY_PROP'),
                         decisiveness: data.company.decisiveness,
                         creativity: data.company.creativity,
                         kindness: data.company.kindness,
@@ -3632,7 +3660,7 @@ var vm = new Vue({
                     if (self.empty(arr) || arr.length < 5) {
                         continue;
                     }
-                    if (arr[0] == '公司属性') {
+                    if (arr[0] == self.get_string('COMPANY_PROP')) {
                         self.company.decisiveness = arr[1];
                         self.company.creativity = arr[2];
                         self.company.kindness = arr[3];
@@ -3649,7 +3677,7 @@ var vm = new Vue({
             }
 
             if (self.empty(list)) {
-                self.show_msg('数据格式错误');
+                self.show_msg(self.get_string('TIP_FORMAT_ERROR'));
                 return false;
             }
 
@@ -3660,7 +3688,8 @@ var vm = new Vue({
                 type: 'post',
                 data: {
                     token: self.get_token(),
-                    list: JSON.stringify(list)
+                    list: JSON.stringify(list),
+                    location: self.location
                 },
                 success: function(res) {
                     if (res.status == 1) {
@@ -3670,11 +3699,11 @@ var vm = new Vue({
                         self.load();
                         $('#batch').modal('hide');
                     } else if (res.info) {
-                        show_msg(res.info);
+                        self.show_msg(self.get_string(res.info));
                     }
                 },
                 error: function(res) {
-                    self.show_msg('请求失败');
+                    self.show_msg(self.get_string('TIP_REQUEST_FAIL'));
                 },
                 complete: function() {
                     $('#import_data').button('reset');
@@ -3749,7 +3778,7 @@ var vm = new Vue({
         },
         //添加羁绊
         add_all_card: function() {
-            var ack = confirm('确定添加全部吗？');
+            var ack = confirm(this.get_string('TIP_ADD_ALL'));
             if (!ack) {
                 return false;
             }
@@ -3792,7 +3821,8 @@ var vm = new Vue({
                     creativity: data.creativity,
                     kindness: data.kindness,
                     activity: data.activity,
-                    user_correct: user_correct
+                    user_correct: user_correct,
+                    location: self.location
                 },
                 success: function(res) {
                     if (res.status == 1) {
@@ -3823,11 +3853,11 @@ var vm = new Vue({
                         }
                         self.my_cards = my_cards;
                     } else if (res.info) {
-                        show_msg(res.info);
+                        self.show_msg(self.get_string(res.info));
                     }
                 },
                 error: function(res) {
-                    self.show_msg('请求失败');
+                    self.show_msg(self.get_string('TIP_REQUEST_FAIL'));
                 }
             });
         },
@@ -3858,7 +3888,8 @@ var vm = new Vue({
                     creativity: self.card_select.creativity,
                     kindness: self.card_select.kindness,
                     activity: self.card_select.activity,
-                    user_correct: user_correct
+                    user_correct: user_correct,
+                    location: self.location
                 },
                 success: function(res) {
                     if (res.status == 1) {
@@ -3891,11 +3922,11 @@ var vm = new Vue({
 
                         $('#card').modal('hide');
                     } else if (res.info) {
-                        show_msg(res.info);
+                        self.show_msg(self.get_string(res.info));
                     }
                 },
                 error: function(res) {
-                    self.show_msg('请求失败');
+                    self.show_msg(self.get_string('TIP_REQUEST_FAIL'));
                 },
                 complete: function() {
                     $('#save_card').button('reset');
@@ -3903,14 +3934,15 @@ var vm = new Vue({
             });
         },
         remove_all: function() {
-            var ack = confirm('确定清空吗？');
+            var ack = confirm(this.get_string('TIP_CLEAR'));
             if (ack) {
                 var self = this;
                 $.ajax({
                     url: self.base_url + 'remove_all',
                     type: 'post',
                     data: {
-                        token: self.get_token()
+                        token: self.get_token(),
+                        location: self.location
                     },
                     success: function(res) {
                         if (res.status == 1) {
@@ -3921,17 +3953,17 @@ var vm = new Vue({
                             self.levels.level = {};
                             self.levels.cards = [];
                         } else if (res.info) {
-                            show_msg(res.info);
+                            self.show_msg(self.get_string(res.info));
                         }
                     },
                     error: function(res) {
-                        self.show_msg('请求失败');
+                        self.show_msg(self.get_string('TIP_REQUEST_FAIL'));
                     }
                 });
             }
         },
         remove_card: function(id) {
-            var ack = confirm('确定删除吗？');
+            var ack = confirm(this.get_string('TIP_DELETE'));
             if (ack) {
                 var self = this;
                 $.ajax({
@@ -3939,7 +3971,8 @@ var vm = new Vue({
                     type: 'post',
                     data: {
                         token: self.get_token(),
-                        card_id: id
+                        card_id: id,
+                        location: self.location
                     },
                     success: function(res) {
                         if (res.status == 1) {
@@ -3947,11 +3980,11 @@ var vm = new Vue({
                             self.my_cards.splice(idx, 1);
                             self.list.splice(idx, 1);
                         } else if (res.info) {
-                            show_msg(res.info);
+                            self.show_msg(self.get_string(res.info));
                         }
                     },
                     error: function(res) {
-                        self.show_msg('请求失败');
+                        self.show_msg(self.get_string('TIP_REQUEST_FAIL'));
                     }
                 });
             }
@@ -4039,15 +4072,16 @@ var vm = new Vue({
                     decisiveness: self.company.decisiveness,
                     creativity: self.company.creativity,
                     kindness: self.company.kindness,
-                    activity: self.company.activity
+                    activity: self.company.activity,
+                    location: self.location
                 },
                 success: function(res) {
                     if (res.info) {
-                        show_msg(res.info);
+                        self.show_msg(self.get_string(res.info));
                     }
                 },
                 error: function(res) {
-                    self.show_msg('请求失败');
+                    self.show_msg(self.get_string('TIP_REQUEST_FAIL'));
                 },
                 complete: function() {
                     $('#update_company').button('reset');
@@ -4065,7 +4099,7 @@ var vm = new Vue({
             $('#user_login').button('loading');
 
             if (self.login.name == '') {
-                self.login.warning = '请填写公司名称';
+                self.login.warning = self.get_string('TIP_REQUIRE_COMPANY_NAME');
                 return false;
             }
 
@@ -4076,6 +4110,7 @@ var vm = new Vue({
                     name: self.login.name,
                     code: self.login.code,
                     list: self.login.option == 'create_user' ? self.get_json_list() : '',
+                    location: self.location
                 },
                 success: function(res) {
                     if (res.status == 1) {
@@ -4103,11 +4138,11 @@ var vm = new Vue({
 
                         $('#company').modal('hide');
                     } else if (res.info) {
-                        self.login.warning = res.info;
+                        self.login.warning = self.get_string(res.info);
                     }
                 },
                 error: function(res) {
-                    self.show_msg('请求失败');
+                    self.show_msg(self.get_string('TIP_REQUEST_FAIL'));
                 },
                 complete: function() {
                     $('#user_login').button('reset');
@@ -4123,7 +4158,7 @@ var vm = new Vue({
 
             var json = [];
             json.push({
-                name: '公司属性',
+                name: this.get_string('COMPANY_PROP'),
                 decisiveness: this.company.decisiveness,
                 creativity: this.company.creativity,
                 kindness: this.company.kindness,
@@ -4162,25 +4197,30 @@ var vm = new Vue({
         //获取标签
         get_gain_tag: function(gain) {
             if (gain.indexOf('副本') >= 0) {
-                return '副本';
+                return this.get_string('COPY');
             } else if (gain.indexOf('充值') >= 0) {
-                return '充值';
+                return this.get_string('PAY');
             } else if (gain.indexOf('签到') >= 0) {
-                return '签到';
+                return this.get_string('CHECKIN');
             } else if (gain.indexOf('公测') >= 0) {
-                return '公测';
+                return this.get_string('OBT');
             } else if (gain.indexOf('许愿') >= 0) {
-                return '许愿';
+                return  this.get_string('DRAW');
+            } else if (gain.indexOf('交易所') >= 0) {
+                return  this.get_string('EXCHANGE');
             } else if (gain.indexOf('登录') >= 0) {
-                return '登录';
+                return this.get_string('GIFT');
             } else if (gain.indexOf('24小时') >= 0) {
-                return '24小时';
+                return this.get_string('CHALLENGE');
             } else if (gain.indexOf('梦心湖') >= 0) {
-                return '梦心湖';
+                return this.get_string('DISASTER');
             } else if (gain.indexOf('限定') >= 0) {
-                return '限定';
+                return this.get_string('LIMITED');
+            } else if (gain.indexOf('票房') >= 0) {
+                return this.get_string('TICKET');
             } else {
-                return gain;
+                return this.get_string('OTHER');
+                // return gain;
             }
         },
         //人物标签
@@ -4189,19 +4229,19 @@ var vm = new Vue({
             var ret = '';
             switch (category) {
                 case 1:
-                    ret = '李泽言';
+                    ret = this.get_string('LIZEYAN');
                     break;
                 case 2:
-                    ret = '许墨';
+                    ret = this.get_string('XUMO');
                     break;
                 case 3:
-                    ret = '周棋洛';
+                    ret = this.get_string('ZHOUQILUO');
                     break;
                 case 4:
-                    ret = '白起';
+                    ret = this.get_string('BAIQI');
                     break;
                 case 5:
-                    ret = '其他';
+                    ret = this.get_string('OTHER');
                     break;
             }
             return ret;
@@ -4222,9 +4262,9 @@ var vm = new Vue({
 
             var ret = '';
             if (rank == -1) {
-                ret = '无数据';
+                ret = this.get_string('NO_DATA');
             } else {
-                ret = rank + '星';
+                ret = rank + this.get_string('STAR_AFTER');
             }
             return ret;
         },
@@ -4234,31 +4274,22 @@ var vm = new Vue({
             var ret = '';
             switch (category) {
                 case 1:
-                    ret = '普通';
+                    ret = this.get_string('DAY');
                     break;
                 case 2:
-                    ret = '精英';
+                    ret = this.get_string('NIGHT');
                     break;
                 case 3:
-                    ret = '副本-许墨';
+                    ret = this.get_string('COPY_XUMO');
                     break;
                 case 4:
-                    ret = '副本-白起';
+                    ret = this.get_string('COPY_BAIQI');
                     break;
                 case 5:
-                    ret = '副本-李泽言';
+                    ret = this.get_string('COPY_LIZEYAN');
                     break;
                 case 6:
-                    ret = '副本-周棋洛';
-                    break;
-                case 7:
-                    ret = '李泽言生日';
-                    break;
-                case 8:
-                    ret = '白起情人节';
-                    break;
-                case 9:
-                    ret = '周棋洛生日';
+                    ret = this.get_string('COPY_ZHOUQILUO');
                     break;
             }
             return ret;
@@ -4284,7 +4315,7 @@ var vm = new Vue({
         },
         //进化标签
         get_evolved_tag: function(evolved) {
-            var ret = evolved == 1 ? '进化' : '未进化';
+            var ret = evolved == 1 ? this.get_string('IS_EVOLVED') : this.get_string('NOT_EVOLVED');
             return ret;
         },
         //类型标签
@@ -4325,10 +4356,15 @@ var vm = new Vue({
                 url: self.base_url + 'init',
                 type: 'post',
                 data: {
-                    token: self.get_token()
+                    token: self.get_token(),
+                    location: self.location
                 },
                 success: function(res) {
                     if (res.status == 1) {
+                        if(!res.maintenance){
+                            $('#app').show();
+                        }
+
                         self.select = res.select;
                         self.cards = res.cards;
 
@@ -4452,11 +4488,14 @@ var vm = new Vue({
                             self.nav = 'card';
                         }
                     } else if (res.info) {
-                        self.show_msg(res.info);
+                        self.show_msg(self.get_string(res.info));
                     }
                 },
                 error: function(res) {
-                    self.show_msg('请求失败');
+                    self.show_msg(self.get_string('TIP_REQUEST_FAIL'));
+                },
+                complete: function(){
+                    $('#ajax_tips').hide();
                 }
             });
 
@@ -4468,6 +4507,7 @@ var vm = new Vue({
     },
     mounted: function() {
         $('#tips').hide();
+        $('#ajax_tips').show();
         this.list = $.LS.get('list') ? JSON.parse($.LS.get('list')) : [];
         this.my_cards = $.LS.get('my_cards') ? JSON.parse($.LS.get('my_cards')) : [];
         this.load();
